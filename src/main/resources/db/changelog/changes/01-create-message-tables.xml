@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="01-create-message-tables" author="jdbcstore">
+        <comment>Create tables for JDBC Message Store</comment>
+
+        <!-- INT_MESSAGE table for storing messages -->
+        <createTable tableName="INT_MESSAGE">
+            <column name="MESSAGE_ID" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="REGION" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="CREATED_DATE" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MESSAGE_BYTES" type="BYTEA">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- INT_CHANNEL_MESSAGE table for JdbcChannelMessageStore -->
+        <createTable tableName="INT_CHANNEL_MESSAGE">
+            <column name="GROUP_KEY" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_DATE" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MESSAGE_ID" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MESSAGE_BYTES" type="BYTEA">
+                <constraints nullable="true"/>
+            </column>
+            <column name="MESSAGE_PRIORITY" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="MESSAGE_SEQUENCE" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="REGION" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <!-- Primary key for INT_CHANNEL_MESSAGE -->
+        <addPrimaryKey tableName="INT_CHANNEL_MESSAGE" columnNames="GROUP_KEY, CREATED_DATE" constraintName="PK_INT_CHANNEL_MESSAGE"/>
+
+        <!-- INT_GROUP_MESSAGE table for message group to message mappings -->
+        <createTable tableName="INT_GROUP_MESSAGE">
+            <column name="GROUP_KEY" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="MESSAGE_ID" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="REGION" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="MARKED" type="BOOLEAN">
+                <constraints nullable="true"/>
+            </column>
+            <column name="COMPLETE" type="BOOLEAN">
+                <constraints nullable="true"/>
+            </column>
+            <column name="CREATED_DATE" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="UPDATED_DATE" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="GROUP_TIMESTAMP" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <!-- Primary key for INT_GROUP_MESSAGE -->
+        <addPrimaryKey tableName="INT_GROUP_MESSAGE" columnNames="GROUP_KEY, MESSAGE_ID" constraintName="PK_INT_GROUP_MESSAGE"/>
+
+        <!-- Foreign key from INT_GROUP_MESSAGE to INT_MESSAGE -->
+        <addForeignKeyConstraint baseTableName="INT_GROUP_MESSAGE" baseColumnNames="MESSAGE_ID"
+                                 constraintName="FK_INT_GROUP_MESSAGE_MESSAGE"
+                                 referencedTableName="INT_MESSAGE" referencedColumnNames="MESSAGE_ID"
+                                 onDelete="CASCADE"/>
+
+        <!-- INT_MESSAGE_GROUP table for message groups -->
+        <createTable tableName="INT_MESSAGE_GROUP">
+            <column name="GROUP_KEY" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="REGION" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="MARKED" type="BOOLEAN">
+                <constraints nullable="true"/>
+            </column>
+            <column name="COMPLETE" type="BOOLEAN">
+                <constraints nullable="true"/>
+            </column>
+            <column name="CREATED_DATE" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="UPDATED_DATE" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="LAST_RELEASED_SEQUENCE" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <!-- INT_LOCK table for distributed locking -->
+        <createTable tableName="INT_LOCK">
+            <column name="LOCK_KEY" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="REGION" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="CLIENT_ID" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_DATE" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes for better performance -->
+        <createIndex indexName="IDX_INT_MESSAGE_CREATED_DATE" tableName="INT_MESSAGE">
+            <column name="CREATED_DATE"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_INT_CHANNEL_MESSAGE_GROUP_KEY" tableName="INT_CHANNEL_MESSAGE">
+            <column name="GROUP_KEY"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_INT_CHANNEL_MESSAGE_CREATED_DATE" tableName="INT_CHANNEL_MESSAGE">
+            <column name="CREATED_DATE"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_INT_GROUP_MESSAGE_GROUP_KEY" tableName="INT_GROUP_MESSAGE">
+            <column name="GROUP_KEY"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_INT_GROUP_MESSAGE_CREATED_DATE" tableName="INT_GROUP_MESSAGE">
+            <column name="CREATED_DATE"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_INT_MESSAGE_GROUP_CREATED_DATE" tableName="INT_MESSAGE_GROUP">
+            <column name="CREATED_DATE"/>
+        </createIndex>
+
+        <createIndex indexName="IDX_INT_MESSAGE_GROUP_UPDATED_DATE" tableName="INT_MESSAGE_GROUP">
+            <column name="UPDATED_DATE"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
